@@ -1,8 +1,8 @@
 /*
 
 import Array exposing (initialize)
-import Elm.Kernel.List exposing (Cons, Nil, fromArray)
-import Elm.Kernel.Utils exposing (Tuple2)
+import Gren.Kernel.List exposing (Cons, Nil, fromArray)
+import Gren.Kernel.Utils exposing (Tuple2)
 import Json.Decode as Json exposing (Field, Index, OneOf, Failure, errorToString)
 import List exposing (reverse)
 import Maybe exposing (Just, Nothing)
@@ -223,7 +223,7 @@ function _Json_runHelp(decoder, value)
 			{
 				return _Json_expecting('an ARRAY', value);
 			}
-			return _Json_runArrayDecoder(decoder.__decoder, value, _Json_toElmArray);
+			return _Json_runArrayDecoder(decoder.__decoder, value, _Json_toGrenArray);
 
 		case __1_FIELD:
 			var field = decoder.__field;
@@ -310,7 +310,7 @@ function _Json_runHelp(decoder, value)
 	}
 }
 
-function _Json_runArrayDecoder(decoder, value, toElmValue)
+function _Json_runArrayDecoder(decoder, value, toGrenValue)
 {
 	var len = value.length;
 	var array = new Array(len);
@@ -323,7 +323,7 @@ function _Json_runArrayDecoder(decoder, value, toElmValue)
 		}
 		array[i] = result.a;
 	}
-	return __Result_Ok(toElmValue(array));
+	return __Result_Ok(toGrenValue(array));
 }
 
 function _Json_isArray(value)
@@ -331,7 +331,7 @@ function _Json_isArray(value)
 	return Array.isArray(value) || (typeof FileList !== 'undefined' && value instanceof FileList);
 }
 
-function _Json_toElmArray(array)
+function _Json_toGrenArray(array)
 {
 	return A2(__Array_initialize, array.length, function(i) { return array[i]; });
 }

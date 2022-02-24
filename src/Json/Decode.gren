@@ -8,7 +8,7 @@ module Json.Decode exposing
   , lazy, value, null, succeed, fail, andThen
   )
 
-{-| Turn JSON values into Elm values. Definitely check out this [intro to
+{-| Turn JSON values into Gren values. Definitely check out this [intro to
 JSON decoders][guide] to get a feel for how this library works!
 
 [guide]: https://guide.elm-lang.org/effects/json.html
@@ -46,7 +46,7 @@ errors.
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Json.Encode
-import Elm.Kernel.Json
+import Gren.Kernel.Json
 
 
 
@@ -62,7 +62,7 @@ introduction!
 type Decoder a = Decoder
 
 
-{-| Decode a JSON string into an Elm `String`.
+{-| Decode a JSON string into an Gren `String`.
 
     decodeString string "true"              == Err ...
     decodeString string "42"                == Err ...
@@ -72,10 +72,10 @@ type Decoder a = Decoder
 -}
 string : Decoder String
 string =
-  Elm.Kernel.Json.decodeString
+  Gren.Kernel.Json.decodeString
 
 
-{-| Decode a JSON boolean into an Elm `Bool`.
+{-| Decode a JSON boolean into an Gren `Bool`.
 
     decodeString bool "true"              == Ok True
     decodeString bool "42"                == Err ...
@@ -85,10 +85,10 @@ string =
 -}
 bool : Decoder Bool
 bool =
-  Elm.Kernel.Json.decodeBool
+  Gren.Kernel.Json.decodeBool
 
 
-{-| Decode a JSON number into an Elm `Int`.
+{-| Decode a JSON number into an Gren `Int`.
 
     decodeString int "true"              == Err ...
     decodeString int "42"                == Ok 42
@@ -98,10 +98,10 @@ bool =
 -}
 int : Decoder Int
 int =
-  Elm.Kernel.Json.decodeInt
+  Gren.Kernel.Json.decodeInt
 
 
-{-| Decode a JSON number into an Elm `Float`.
+{-| Decode a JSON number into an Gren `Float`.
 
     decodeString float "true"              == Err ..
     decodeString float "42"                == Ok 42
@@ -111,14 +111,14 @@ int =
 -}
 float : Decoder Float
 float =
-  Elm.Kernel.Json.decodeFloat
+  Gren.Kernel.Json.decodeFloat
 
 
 
 -- DATA STRUCTURES
 
 
-{-| Decode a nullable JSON value into an Elm value.
+{-| Decode a nullable JSON value into an Gren value.
 
     decodeString (nullable int) "13"    == Ok (Just 13)
     decodeString (nullable int) "42"    == Ok (Just 42)
@@ -133,27 +133,27 @@ nullable decoder =
     ]
 
 
-{-| Decode a JSON array into an Elm `List`.
+{-| Decode a JSON array into an Gren `List`.
 
     decodeString (list int) "[1,2,3]"       == Ok [1,2,3]
     decodeString (list bool) "[true,false]" == Ok [True,False]
 -}
 list : Decoder a -> Decoder (List a)
 list =
-  Elm.Kernel.Json.decodeList
+  Gren.Kernel.Json.decodeList
 
 
-{-| Decode a JSON array into an Elm `Array`.
+{-| Decode a JSON array into an Gren `Array`.
 
     decodeString (array int) "[1,2,3]"       == Ok (Array.fromList [1,2,3])
     decodeString (array bool) "[true,false]" == Ok (Array.fromList [True,False])
 -}
 array : Decoder a -> Decoder (Array a)
 array =
-  Elm.Kernel.Json.decodeArray
+  Gren.Kernel.Json.decodeArray
 
 
-{-| Decode a JSON object into an Elm `Dict`.
+{-| Decode a JSON object into an Gren `Dict`.
 
     decodeString (dict int) "{ \"alice\": 42, \"bob\": 99 }"
       == Ok (Dict.fromList [("alice", 42), ("bob", 99)])
@@ -201,14 +201,14 @@ dict decoder =
   map Dict.fromList (keyValuePairs decoder)
 
 
-{-| Decode a JSON object into an Elm `List` of pairs.
+{-| Decode a JSON object into an Gren `List` of pairs.
 
     decodeString (keyValuePairs int) "{ \"alice\": 42, \"bob\": 99 }"
       == Ok [("alice", 42), ("bob", 99)]
 -}
 keyValuePairs : Decoder a -> Decoder (List (String, a))
 keyValuePairs =
-  Elm.Kernel.Json.decodeKeyValuePairs
+  Gren.Kernel.Json.decodeKeyValuePairs
 
 
 {-| Decode a JSON array that has one or more elements. This comes up if you
@@ -263,7 +263,7 @@ Check out [`map2`](#map2) to see how to decode multiple fields!
 -}
 field : String -> Decoder a -> Decoder a
 field =
-    Elm.Kernel.Json.decodeField
+    Gren.Kernel.Json.decodeField
 
 
 {-| Decode a nested JSON object, requiring certain fields.
@@ -293,7 +293,7 @@ at fields decoder =
 -}
 index : Int -> Decoder a -> Decoder a
 index =
-    Elm.Kernel.Json.decodeIndex
+    Gren.Kernel.Json.decodeIndex
 
 
 
@@ -349,7 +349,7 @@ even more particular if you wanted.
 -}
 oneOf : List (Decoder a) -> Decoder a
 oneOf =
-    Elm.Kernel.Json.oneOf
+    Gren.Kernel.Json.oneOf
 
 
 
@@ -375,7 +375,7 @@ It is often helpful to use `map` with `oneOf`, like when defining `nullable`:
 -}
 map : (a -> value) -> Decoder a -> Decoder value
 map =
-    Elm.Kernel.Json.map1
+    Gren.Kernel.Json.map1
 
 
 {-| Try two decoders and then combine the result. We can use this to decode
@@ -396,7 +396,7 @@ constructor.
 -}
 map2 : (a -> b -> value) -> Decoder a -> Decoder b -> Decoder value
 map2 =
-    Elm.Kernel.Json.map2
+    Gren.Kernel.Json.map2
 
 
 {-| Try three decoders and then combine the result. We can use this to decode
@@ -419,37 +419,37 @@ Like `map2` it tries each decoder in order and then give the results to the
 -}
 map3 : (a -> b -> c -> value) -> Decoder a -> Decoder b -> Decoder c -> Decoder value
 map3 =
-    Elm.Kernel.Json.map3
+    Gren.Kernel.Json.map3
 
 
 {-|-}
 map4 : (a -> b -> c -> d -> value) -> Decoder a -> Decoder b -> Decoder c -> Decoder d -> Decoder value
 map4 =
-    Elm.Kernel.Json.map4
+    Gren.Kernel.Json.map4
 
 
 {-|-}
 map5 : (a -> b -> c -> d -> e -> value) -> Decoder a -> Decoder b -> Decoder c -> Decoder d -> Decoder e -> Decoder value
 map5 =
-    Elm.Kernel.Json.map5
+    Gren.Kernel.Json.map5
 
 
 {-|-}
 map6 : (a -> b -> c -> d -> e -> f -> value) -> Decoder a -> Decoder b -> Decoder c -> Decoder d -> Decoder e -> Decoder f -> Decoder value
 map6 =
-    Elm.Kernel.Json.map6
+    Gren.Kernel.Json.map6
 
 
 {-|-}
 map7 : (a -> b -> c -> d -> e -> f -> g -> value) -> Decoder a -> Decoder b -> Decoder c -> Decoder d -> Decoder e -> Decoder f -> Decoder g -> Decoder value
 map7 =
-    Elm.Kernel.Json.map7
+    Gren.Kernel.Json.map7
 
 
 {-|-}
 map8 : (a -> b -> c -> d -> e -> f -> g -> h -> value) -> Decoder a -> Decoder b -> Decoder c -> Decoder d -> Decoder e -> Decoder f -> Decoder g -> Decoder h -> Decoder value
 map8 =
-    Elm.Kernel.Json.map8
+    Gren.Kernel.Json.map8
 
 
 
@@ -465,7 +465,7 @@ fails for some reason.
 -}
 decodeString : Decoder a -> String -> Result Error a
 decodeString =
-  Elm.Kernel.Json.runOnString
+  Gren.Kernel.Json.runOnString
 
 
 {-| Run a `Decoder` on some JSON `Value`. You can send these JSON values
@@ -473,7 +473,7 @@ through ports, so that is probably the main time you would use this function.
 -}
 decodeValue : Decoder a -> Value -> Result Error a
 decodeValue =
-  Elm.Kernel.Json.run
+  Gren.Kernel.Json.run
 
 
 {-| Represents a JavaScript value.
@@ -592,7 +592,7 @@ indent str =
 -- FANCY PRIMITIVES
 
 
-{-| Ignore the JSON and produce a certain Elm value.
+{-| Ignore the JSON and produce a certain Gren value.
 
     decodeString (succeed 42) "true"    == Ok 42
     decodeString (succeed 42) "[1,2,3]" == Ok 42
@@ -602,7 +602,7 @@ This is handy when used with `oneOf` or `andThen`.
 -}
 succeed : a -> Decoder a
 succeed =
-  Elm.Kernel.Json.succeed
+  Gren.Kernel.Json.succeed
 
 
 {-| Ignore the JSON and make the decoder fail. This is handy when used with
@@ -613,7 +613,7 @@ See the [`andThen`](#andThen) docs for an example.
 -}
 fail : String -> Decoder a
 fail =
-  Elm.Kernel.Json.fail
+  Gren.Kernel.Json.fail
 
 
 {-| Create decoders that depend on previous results. If you are creating
@@ -643,7 +643,7 @@ versioned data, you might do something like this:
 -}
 andThen : (a -> Decoder b) -> Decoder a -> Decoder b
 andThen =
-  Elm.Kernel.Json.andThen
+  Gren.Kernel.Json.andThen
 
 
 {-| Sometimes you have JSON with recursive structure, like nested comments.
@@ -677,17 +677,17 @@ lazy thunk =
   andThen thunk (succeed ())
 
 
-{-| Do not do anything with a JSON value, just bring it into Elm as a `Value`.
+{-| Do not do anything with a JSON value, just bring it into Gren as a `Value`.
 This can be useful if you have particularly complex data that you would like to
 deal with later. Or if you are going to send it out a port and do not care
 about its structure.
 -}
 value : Decoder Value
 value =
-  Elm.Kernel.Json.decodeValue
+  Gren.Kernel.Json.decodeValue
 
 
-{-| Decode a `null` value into some Elm value.
+{-| Decode a `null` value into some Gren value.
 
     decodeString (null False) "null" == Ok False
     decodeString (null 42) "null"    == Ok 42
@@ -698,4 +698,4 @@ So if you ever see a `null`, this will return whatever value you specified.
 -}
 null : a -> Decoder a
 null =
-  Elm.Kernel.Json.decodeNull
+  Gren.Kernel.Json.decodeNull

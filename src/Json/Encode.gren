@@ -6,7 +6,7 @@ module Json.Encode exposing
   , object, dict
   )
 
-{-| Library for turning Elm values into Json values.
+{-| Library for turning Gren values into Json values.
 
 # Encoding
 @docs encode, Value
@@ -25,7 +25,7 @@ module Json.Encode exposing
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Set exposing (Set)
-import Elm.Kernel.Json
+import Gren.Kernel.Json
 
 
 
@@ -60,7 +60,7 @@ the amount of indentation in the resulting string.
 -}
 encode : Int -> Value -> String
 encode =
-    Elm.Kernel.Json.encode
+    Gren.Kernel.Json.encode
 
 
 
@@ -77,7 +77,7 @@ encode =
 -}
 string : String -> Value
 string =
-    Elm.Kernel.Json.wrap
+    Gren.Kernel.Json.wrap
 
 
 {-| Turn an `Int` into a JSON number.
@@ -90,7 +90,7 @@ string =
 -}
 int : Int -> Value
 int =
-    Elm.Kernel.Json.wrap
+    Gren.Kernel.Json.wrap
 
 
 {-| Turn a `Float` into a JSON number.
@@ -113,7 +113,7 @@ both as `null`.
 -}
 float : Float -> Value
 float =
-    Elm.Kernel.Json.wrap
+    Gren.Kernel.Json.wrap
 
 
 {-| Turn a `Bool` into a JSON boolean.
@@ -125,7 +125,7 @@ float =
 -}
 bool : Bool -> Value
 bool =
-    Elm.Kernel.Json.wrap
+    Gren.Kernel.Json.wrap
 
 
 
@@ -140,7 +140,7 @@ bool =
 -}
 null : Value
 null =
-    Elm.Kernel.Json.encodeNull
+    Gren.Kernel.Json.encodeNull
 
 
 
@@ -158,24 +158,24 @@ null =
 -}
 list : (a -> Value) -> List a -> Value
 list func entries =
-    Elm.Kernel.Json.wrap
-        (List.foldl (Elm.Kernel.Json.addEntry func) (Elm.Kernel.Json.emptyArray ()) entries)
+    Gren.Kernel.Json.wrap
+        (List.foldl (Gren.Kernel.Json.addEntry func) (Gren.Kernel.Json.emptyArray ()) entries)
 
 
 {-| Turn an `Array` into a JSON array.
 -}
 array : (a -> Value) -> Array a -> Value
 array func entries =
-    Elm.Kernel.Json.wrap
-        (Array.foldl (Elm.Kernel.Json.addEntry func) (Elm.Kernel.Json.emptyArray ()) entries)
+    Gren.Kernel.Json.wrap
+        (Array.foldl (Gren.Kernel.Json.addEntry func) (Gren.Kernel.Json.emptyArray ()) entries)
 
 
 {-| Turn an `Set` into a JSON array.
 -}
 set : (a -> Value) -> Set a -> Value
 set func entries =
-    Elm.Kernel.Json.wrap
-        (Set.foldl (Elm.Kernel.Json.addEntry func) (Elm.Kernel.Json.emptyArray ()) entries)
+    Gren.Kernel.Json.wrap
+        (Set.foldl (Gren.Kernel.Json.addEntry func) (Gren.Kernel.Json.emptyArray ()) entries)
 
 
 
@@ -197,10 +197,10 @@ set func entries =
 -}
 object : List (String, Value) -> Value
 object pairs =
-    Elm.Kernel.Json.wrap (
+    Gren.Kernel.Json.wrap (
         List.foldl
-            (\(k,v) obj -> Elm.Kernel.Json.addField k v obj)
-            (Elm.Kernel.Json.emptyObject ())
+            (\(k,v) obj -> Gren.Kernel.Json.addField k v obj)
+            (Gren.Kernel.Json.emptyObject ())
             pairs
     )
 
@@ -219,9 +219,9 @@ object pairs =
 -}
 dict : (k -> String) -> (v -> Value) -> Dict k v -> Value
 dict toKey toValue dictionary =
-    Elm.Kernel.Json.wrap (
+    Gren.Kernel.Json.wrap (
         Dict.foldl
-            (\key value obj -> Elm.Kernel.Json.addField (toKey key) (toValue value) obj)
-            (Elm.Kernel.Json.emptyObject ())
+            (\key value obj -> Gren.Kernel.Json.addField (toKey key) (toValue value) obj)
+            (Gren.Kernel.Json.emptyObject ())
             dictionary
     )
