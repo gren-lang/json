@@ -1,6 +1,6 @@
 module Json.Decode exposing
   ( Decoder, string, bool, int, float
-  , nullable, list, array, dict, keyValuePairs, oneOrMore
+  , nullable, array, dict, keyValuePairs, oneOrMore
   , field, at, index
   , maybe, oneOf
   , decodeString, decodeValue, Value, Error(..), errorToString
@@ -17,7 +17,7 @@ JSON decoders][guide] to get a feel for how this library works!
 @docs Decoder, string, bool, int, float
 
 # Data Structures
-@docs nullable, list, array, dict, keyValuePairs, oneOrMore
+@docs nullable, array, dict, keyValuePairs, oneOrMore
 
 # Object Primitives
 @docs field, at, index
@@ -133,20 +133,10 @@ nullable decoder =
     ]
 
 
-{-| Decode a JSON array into an Gren `List`.
-
-    decodeString (list int) "[1,2,3]"       == Ok [1,2,3]
-    decodeString (list bool) "[true,false]" == Ok [True,False]
--}
-list : Decoder a -> Decoder (List a)
-list =
-  Gren.Kernel.Json.decodeList
-
-
 {-| Decode a JSON array into an Gren `Array`.
 
-    decodeString (array int) "[1,2,3]"       == Ok (Array.fromList [1,2,3])
-    decodeString (array bool) "[true,false]" == Ok (Array.fromList [True,False])
+    decodeString (array int) "[1,2,3]"       == Ok [1,2,3]
+    decodeString (array bool) "[true,false]" == Ok [True,False]
 -}
 array : Decoder a -> Decoder (Array a)
 array =
@@ -156,7 +146,7 @@ array =
 {-| Decode a JSON object into an Gren `Dict`.
 
     decodeString (dict int) "{ \"alice\": 42, \"bob\": 99 }"
-      == Ok (Dict.fromList [("alice", 42), ("bob", 99)])
+      == Ok (Dict.fromArray [("alice", 42), ("bob", 99)])
 
 If you need the keys (like `"alice"` and `"bob"`) available in the `Dict`
 values as well, I recommend using a (private) intermediate data structure like
@@ -198,15 +188,15 @@ you need that.
 -}
 dict : Decoder a -> Decoder (Dict String a)
 dict decoder =
-  map Dict.fromList (keyValuePairs decoder)
+  map Dict.fromArray (keyValuePairs decoder)
 
 
-{-| Decode a JSON object into an Gren `List` of pairs.
+{-| Decode a JSON object into an Gren `Array` of pairs.
 
     decodeString (keyValuePairs int) "{ \"alice\": 42, \"bob\": 99 }"
       == Ok [("alice", 42), ("bob", 99)]
 -}
-keyValuePairs : Decoder a -> Decoder (List (String, a))
+keyValuePairs : Decoder a -> Decoder (Array (String, a))
 keyValuePairs =
   Gren.Kernel.Json.decodeKeyValuePairs
 
@@ -219,7 +209,7 @@ this function with [`elm/file`]() to write a `dropDecoder` like this:
     import Json.Decoder as D
 
     type Msg
-      = GotFiles File (List Files)
+      = GotFiles File (Array Files)
 
     inputDecoder : D.Decoder Msg
     inputDecoder =
@@ -227,20 +217,20 @@ this function with [`elm/file`]() to write a `dropDecoder` like this:
 
 This captures the fact that you can never drag-and-drop zero files.
 -}
-oneOrMore : (a -> List a -> value) -> Decoder a -> Decoder value
+oneOrMore : (a -> Array a -> value) -> Decoder a -> Decoder value
 oneOrMore toValue decoder =
-  list decoder
+  array decoder
     |> andThen (oneOrMoreHelp toValue)
 
 
-oneOrMoreHelp : (a -> List a -> value) -> List a -> Decoder value
+oneOrMoreHelp : (a -> Array a -> value) -> Array a -> Decoder value
 oneOrMoreHelp toValue xs =
-  case xs of
-    [] ->
+  case Array.get 0 xs of
+    Nothing ->
       fail "a ARRAY with at least ONE element"
 
-    y :: ys ->
-      succeed (toValue y ys)
+    Just y ->
+      succeed (toValue y (Array.slice 1 (Array.length xs) xs))
 
 
 
@@ -277,9 +267,9 @@ This is really just a shorthand for saying things like:
 
     field "person" (field "name" string) == at ["person","name"] string
 -}
-at : List String -> Decoder a -> Decoder a
+at : Array String -> Decoder a -> Decoder a
 at fields decoder =
-    List.foldr field decoder fields
+    Array.foldr field decoder fields
 
 
 {-| Decode a JSON array, requiring a particular index.
@@ -337,7 +327,7 @@ numbers, but some of them are `null`.
     badInt =
       oneOf [ int, null 0 ]
 
-    -- decodeString (list badInt) "[1,2,null,4]" == Ok [1,2,0,4]
+    -- decodeString (array badInt) "[1,2,null,4]" == Ok [1,2,0,4]
 
 Why would someone generate JSON like this? Questions like this are not good
 for your health. The point is that you can use `oneOf` to handle situations
@@ -347,7 +337,7 @@ You could also use `oneOf` to help version your data. Try the latest format,
 then a few older ones that you still support. You could use `andThen` to be
 even more particular if you wanted.
 -}
-oneOf : List (Decoder a) -> Decoder a
+oneOf : Array (Decoder a) -> Decoder a
 oneOf =
     Gren.Kernel.Json.oneOf
 
@@ -489,7 +479,7 @@ red.
 type Error
   = Field String Error
   | Index Int Error
-  | OneOf (List Error)
+  | OneOf (Array Error)
   | Failure String Value
 
 
@@ -514,7 +504,7 @@ errorToString error =
   errorToStringHelp error []
 
 
-errorToStringHelp : Error -> List String -> String
+errorToStringHelp : Error -> Array String -> String
 errorToStringHelp error context =
   case error of
     Field f err ->
@@ -530,14 +520,14 @@ errorToStringHelp error context =
         fieldName =
           if isSimple then "." ++ f else "['" ++ f ++ "']"
       in
-        errorToStringHelp err (fieldName :: context)
+        errorToStringHelp err ([fieldName] ++ context)
 
     Index i err ->
       let
         indexName =
           "[" ++ String.fromInt i ++ "]"
       in
-        errorToStringHelp err (indexName :: context)
+        errorToStringHelp err ([indexName] ++ context)
 
     OneOf errors ->
       case errors of
@@ -547,7 +537,7 @@ errorToStringHelp error context =
               [] ->
                 "!"
               _ ->
-                " at json" ++ String.join "" (List.reverse context)
+                " at json" ++ String.join "" context
 
         [err] ->
           errorToStringHelp err context
@@ -559,12 +549,12 @@ errorToStringHelp error context =
                 [] ->
                   "Json.Decode.oneOf"
                 _ ->
-                  "The Json.Decode.oneOf at json" ++ String.join "" (List.reverse context)
+                  "The Json.Decode.oneOf at json" ++ String.join "" context
 
             introduction =
-              starter ++ " failed in the following " ++ String.fromInt (List.length errors) ++ " ways:"
+              starter ++ " failed in the following " ++ String.fromInt (Array.length errors) ++ " ways:"
           in
-            String.join "\n\n" (introduction :: List.indexedMap errorOneOf errors)
+            String.join "\n\n" ([introduction] ++ (Array.indexedMap errorOneOf errors))
 
     Failure msg json ->
       let
@@ -573,7 +563,7 @@ errorToStringHelp error context =
             [] ->
               "Problem with the given value:\n\n"
             _ ->
-              "Problem with the value at json" ++ String.join "" (List.reverse context) ++ ":\n\n    "
+              "Problem with the value at json" ++ String.join "" context ++ ":\n\n    "
       in
         introduction ++ indent (Json.Encode.encode 4 json) ++ "\n\n" ++ msg
 
@@ -654,19 +644,19 @@ You can use `lazy` to make sure your decoder unrolls lazily.
       , responses : Responses
       }
 
-    type Responses = Responses (List Comment)
+    type Responses = Responses (Array Comment)
 
     comment : Decoder Comment
     comment =
       map2 Comment
         (field "message" string)
-        (field "responses" (map Responses (list (lazy (\_ -> comment)))))
+        (field "responses" (map Responses (array (lazy (\_ -> comment)))))
 
-If we had said `list comment` instead, we would start expanding the value
+If we had said `array comment` instead, we would start expanding the value
 infinitely. What is a `comment`? It is a decoder for objects where the
 `responses` field contains comments. What is a `comment` though? Etc.
 
-By using `list (lazy (\_ -> comment))` we make sure the decoder only expands
+By using `array (lazy (\_ -> comment))` we make sure the decoder only expands
 to be as deep as the JSON we are given. You can read more about recursive data
 structures [here][].
 

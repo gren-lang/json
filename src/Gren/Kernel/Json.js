@@ -1,10 +1,7 @@
 /*
 
-import Array exposing (initialize)
-import Gren.Kernel.List exposing (Cons, Nil, fromArray)
 import Gren.Kernel.Utils exposing (Tuple2)
 import Json.Decode as Json exposing (Field, Index, OneOf, Failure, errorToString)
-import List exposing (reverse)
 import Maybe exposing (Just, Nothing)
 import Result exposing (Ok, Err, isOk)
 
@@ -78,7 +75,6 @@ var _Json_decodeString = _Json_decodePrim(function(value) {
 			: _Json_expecting('a STRING', value);
 });
 
-function _Json_decodeList(decoder) { return { $: __1_LIST, __decoder: decoder }; }
 function _Json_decodeArray(decoder) { return { $: __1_ARRAY, __decoder: decoder }; }
 
 function _Json_decodeNull(value) { return { $: __1_NULL, __value: value }; }
@@ -211,19 +207,12 @@ function _Json_runHelp(decoder, value)
 				? __Result_Ok(decoder.__value)
 				: _Json_expecting('null', value);
 
-		case __1_LIST:
-			if (!_Json_isArray(value))
-			{
-				return _Json_expecting('a LIST', value);
-			}
-			return _Json_runArrayDecoder(decoder.__decoder, value, __List_fromArray);
-
 		case __1_ARRAY:
 			if (!_Json_isArray(value))
 			{
 				return _Json_expecting('an ARRAY', value);
 			}
-			return _Json_runArrayDecoder(decoder.__decoder, value, _Json_toGrenArray);
+			return _Json_runArrayDecoder(decoder.__decoder, value);
 
 		case __1_FIELD:
 			var field = decoder.__field;
@@ -253,8 +242,7 @@ function _Json_runHelp(decoder, value)
 				return _Json_expecting('an OBJECT', value);
 			}
 
-			var keyValuePairs = __List_Nil;
-			// TODO test perf of Object.keys and switch when support is good enough
+			var keyValuePairs = [];
 			for (var key in value)
 			{
 				if (value.hasOwnProperty(key))
@@ -264,10 +252,10 @@ function _Json_runHelp(decoder, value)
 					{
 						return __Result_Err(A2(__Json_Field, key, result.a));
 					}
-					keyValuePairs = __List_Cons(__Utils_Tuple2(key, result.a), keyValuePairs);
+                    keyValuePairs.push(__Utils_Tuple2(key, result.a));
 				}
 			}
-			return __Result_Ok(__List_reverse(keyValuePairs));
+			return __Result_Ok(keyValuePairs);
 
 		case __1_MAP:
 			var answer = decoder.__func;
@@ -290,17 +278,20 @@ function _Json_runHelp(decoder, value)
 				: _Json_runHelp(decoder.__callback(result.a), value);
 
 		case __1_ONE_OF:
-			var errors = __List_Nil;
-			for (var temp = decoder.__decoders; temp.b; temp = temp.b) // WHILE_CONS
+			var errors = [];
+			
+            var decoders = decoder.__decoders;
+            for (var idx = decoders; idx < decoders.length; idx++)
 			{
-				var result = _Json_runHelp(temp.a, value);
+				var result = _Json_runHelp(decoders[idx], value);
 				if (__Result_isOk(result))
 				{
 					return result;
 				}
-				errors = __List_Cons(result.a, errors);
+                errors.push(result.a);
 			}
-			return __Result_Err(__Json_OneOf(__List_reverse(errors)));
+			
+            return __Result_Err(__Json_OneOf(errors));
 
 		case __1_FAIL:
 			return __Result_Err(A2(__Json_Failure, decoder.__msg, _Json_wrap(value)));
@@ -310,7 +301,7 @@ function _Json_runHelp(decoder, value)
 	}
 }
 
-function _Json_runArrayDecoder(decoder, value, toGrenValue)
+function _Json_runArrayDecoder(decoder, value)
 {
 	var len = value.length;
 	var array = new Array(len);
@@ -323,17 +314,12 @@ function _Json_runArrayDecoder(decoder, value, toGrenValue)
 		}
 		array[i] = result.a;
 	}
-	return __Result_Ok(toGrenValue(array));
+	return __Result_Ok(array);
 }
 
 function _Json_isArray(value)
 {
 	return Array.isArray(value) || (typeof FileList !== 'undefined' && value instanceof FileList);
-}
-
-function _Json_toGrenArray(array)
-{
-	return A2(__Array_initialize, array.length, function(i) { return array[i]; });
 }
 
 function _Json_expecting(type, value)
@@ -368,7 +354,6 @@ function _Json_equality(x, y)
 		case __1_NULL:
 			return x.__value === y.__value;
 
-		case __1_LIST:
 		case __1_ARRAY:
 		case __1_KEY_VALUE:
 			return _Json_equality(x.__decoder, y.__decoder);
@@ -380,17 +365,17 @@ function _Json_equality(x, y)
 			return x.__index === y.__index && _Json_equality(x.__decoder, y.__decoder);
 
 		case __1_MAP:
-			return x.__func === y.__func && _Json_listEquality(x.__decoders, y.__decoders);
+			return x.__func === y.__func && _Json_arrayEquality(x.__decoders, y.__decoders);
 
 		case __1_AND_THEN:
 			return x.__callback === y.__callback && _Json_equality(x.__decoder, y.__decoder);
 
 		case __1_ONE_OF:
-			return _Json_listEquality(x.__decoders, y.__decoders);
+			return _Json_arrayEquality(x.__decoders, y.__decoders);
 	}
 }
 
-function _Json_listEquality(aDecoders, bDecoders)
+function _Json_arrayEquality(aDecoders, bDecoders)
 {
 	var len = aDecoders.length;
 	if (len !== bDecoders.length)
