@@ -1,6 +1,5 @@
 /*
 
-import Gren.Kernel.Utils exposing (Tuple2)
 import Json.Decode as Json exposing (Field, Index, OneOf, Failure, errorToString)
 import Maybe exposing (Just, Nothing)
 import Result exposing (Ok, Err, isOk)
@@ -252,7 +251,7 @@ function _Json_runHelp(decoder, value)
 					{
 						return __Result_Err(A2(__Json_Field, key, result.a));
 					}
-                    keyValuePairs.push(__Utils_Tuple2(key, result.a));
+                    keyValuePairs.push({ key = key, value = result.a });
 				}
 			}
 			return __Result_Ok(keyValuePairs);

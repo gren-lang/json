@@ -53,8 +53,8 @@ the amount of indentation in the resulting string.
     tom : Encode.Value
     tom =
         Encode.object
-            [ ( "name", Encode.string "Tom" )
-            , ( "age", Encode.int 42 )
+            [ { key = "name", value = Encode.string "Tom" }
+            , { key = "age", value = Encode.int 42 )
             ]
 
     compact =
@@ -182,7 +182,7 @@ null =
 array : (a -> Value) -> Array a -> Value
 array func entries =
     Gren.Kernel.Json.wrap
-        (Array.foldl (Gren.Kernel.Json.addEntry func) (Gren.Kernel.Json.emptyArray ()) entries)
+        (Array.foldl (Gren.Kernel.Json.addEntry func) (Gren.Kernel.Json.emptyArray Unit) entries)
 
 
 {-| Turn an `Set` into a JSON array.
@@ -190,7 +190,7 @@ array func entries =
 set : (a -> Value) -> Set a -> Value
 set func entries =
     Gren.Kernel.Json.wrap
-        (Set.foldl (Gren.Kernel.Json.addEntry func) (Gren.Kernel.Json.emptyArray ()) entries)
+        (Set.foldl (Gren.Kernel.Json.addEntry func) (Gren.Kernel.Json.emptyArray Unit) entries)
 
 
 
@@ -204,19 +204,19 @@ set func entries =
     tom : Encode.Value
     tom =
         Encode.object
-            [ ( "name", Encode.string "Tom" )
-            , ( "age", Encode.int 42 )
+            [ { key = "name", value = Encode.string "Tom" }
+            , { key = "age", value = Encode.int 42 }
             ]
 
     -- Encode.encode 0 tom == """{"name":"Tom","age":42}"""
 
 -}
-object : Array ( String, Value ) -> Value
+object : Array { key : String, value : Value } -> Value
 object pairs =
     Gren.Kernel.Json.wrap
         (Array.foldl
-            (\( k, v ) obj -> Gren.Kernel.Json.addField k v obj)
-            (Gren.Kernel.Json.emptyObject ())
+            (\{ key, value } obj -> Gren.Kernel.Json.addField key value obj)
+            (Gren.Kernel.Json.emptyObject Unit)
             pairs
         )
 
@@ -228,7 +228,7 @@ object pairs =
 
     people : Dict String Int
     people =
-        Dict.fromArray [ ( "Tom", 42 ), ( "Sue", 38 ) ]
+        Dict.fromArray [ { key = "Tom", value = 42 }, { key = "Sue", value = 38 } ]
 
     -- Encode.encode 0 (Encode.dict identity Encode.int people)
     --   == """{"Tom":42,"Sue":38}"""
@@ -239,6 +239,6 @@ dict toKey toValue dictionary =
     Gren.Kernel.Json.wrap
         (Dict.foldl
             (\key value obj -> Gren.Kernel.Json.addField (toKey key) (toValue value) obj)
-            (Gren.Kernel.Json.emptyObject ())
+            (Gren.Kernel.Json.emptyObject Unit)
             dictionary
         )
