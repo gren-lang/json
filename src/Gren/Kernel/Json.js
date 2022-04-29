@@ -251,7 +251,7 @@ function _Json_runHelp(decoder, value)
 					{
 						return __Result_Err(A2(__Json_Field, key, result.a));
 					}
-                    keyValuePairs.push({ key = key, value = result.a });
+                    keyValuePairs.push({ __$key: key, __$value: result.a });
 				}
 			}
 			return __Result_Ok(keyValuePairs);
