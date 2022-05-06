@@ -280,7 +280,7 @@ function _Json_runHelp(decoder, value)
 			var errors = [];
 			
             var decoders = decoder.__decoders;
-            for (var idx = decoders; idx < decoders.length; idx++)
+            for (var idx = 0; idx < decoders.length; idx++)
 			{
 				var result = _Json_runHelp(decoders[idx], value);
 				if (__Result_isOk(result))
