@@ -32,9 +32,9 @@ type alias Cause =
 encode : Cause -> E.Value
 encode cause =
   E.object
-    [ ("name", E.string cause.name)
-    , ("percent", E.float cause.percent)
-    , ("per100k", E.float cause.per100k)
+    [ { key = "name", value = E.string cause.name }
+    , { key = "percent", value = E.float cause.percent }
+    , { key = "per100k", value = E.float cause.per100k }
     ]
 
 
@@ -42,7 +42,7 @@ encode cause =
 
 decoder : D.Decoder Cause
 decoder =
-  D.map3 Cause
+  D.map3 (\name percent per100k -> { name = name, percent = percent, per100k = per100k })
     (D.field "name" D.string)
     (D.field "percent" D.float)
     (D.field "per100k" D.float)
